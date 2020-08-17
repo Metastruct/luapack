@@ -45,19 +45,24 @@ function require(module)
 end
 
 local function GetFileFromPathStack(filepath)
+	luapack.DebugMsg("%s\n", filepath)
+
 	local i = 3
 	local dbg = debug.getinfo(i, "S")
 	while dbg do
-		local path = string.match(dbg.source, "^@?(.*)[/\\][^/\\]-$") or string.match(dbg.source, "^@?(.*)$")
-		if #path == 0 then
-			path = filepath
-		else
-			path = path .. "/" .. filepath
-		end
+		if dbg.what ~= "C" then
+			local path = string.match(dbg.source, "^@?(.*)[/\\][^/\\]-$") or string.match(dbg.source, "^@?(.*)$")
+			if #path == 0 then
+				path = filepath
+			else
+				path = path .. "/" .. filepath
+			end
 
-		local obj = luapack.RootDirectory:GetSingle(luapack.CanonicalizePath(path))
-		if obj ~= nil and obj:IsFile() then
-			return obj
+			local obj = luapack.RootDirectory:GetSingle(luapack.CanonicalizePath(path))
+			luapack.DebugMsg("\t%s - %s - %s - %s\n", dbg.source, path, luapack.CanonicalizePath(path), tostring(obj))
+			if obj ~= nil and obj:IsFile() then
+				return obj
+			end
 		end
 
 		i = i + 1
@@ -65,6 +70,7 @@ local function GetFileFromPathStack(filepath)
 	end
 
 	local obj = luapack.RootDirectory:GetSingle(luapack.CanonicalizePath(filepath))
+	luapack.DebugMsg("\t%s - %s - %s\n", filepath, luapack.CanonicalizePath(filepath), tostring(obj))
 	if obj ~= nil and obj:IsFile() then
 		return obj
 	end
